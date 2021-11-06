@@ -22,7 +22,6 @@
     <Folder Include="Core\Fluent\Configurations\" />
     <Folder Include="Core\Fluent\Entities\" />
     <Folder Include="Core\Interfaces\Services\" />
-    <Folder Include="Core\Models\Dto\" />
     <Folder Include="Core\Models\ViewModel\" />
     <Folder Include="Core\Services\" />
   </ItemGroup>

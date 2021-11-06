@@ -32,7 +32,7 @@ namespace AuthMicroservice
             services.AddDbContext<MicroserviceContext>(options =>
             {
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), builder => {
-                    //builder.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+                    builder.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                 });
             });
 

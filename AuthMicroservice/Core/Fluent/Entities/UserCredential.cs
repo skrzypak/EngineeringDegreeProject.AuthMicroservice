@@ -11,7 +11,6 @@ namespace AuthMicroservice.Core.Fluent.Entities
     {
         public int Id { get; set; }
         public int UserDomainId { get; set; }
-
         [MaxLength(64), MinLength(8)]
         public string Password { get; set; }
         public bool IsExpired { get; set; }
