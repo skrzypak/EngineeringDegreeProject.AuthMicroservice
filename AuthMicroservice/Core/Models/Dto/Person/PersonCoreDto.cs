@@ -17,9 +17,10 @@ namespace AuthMicroservice.Core.Models.Dto.Person
         public GenderType Gender { get; set; }
         [MaxLength(100), EmailAddress]
         public string Email { get; set; }
-        [MaxLength(12), Phone]
+        [MaxLength(12)]
         public string PhoneNumber { get; set; }
         public string Address => $"{StreetAddress} {PostalCode} {City}";
+        [MaxLength(100)]
         public string StreetAddress { get; set; }
         [MaxLength(6), MinLength(6)]
         public string PostalCode { get; set; }

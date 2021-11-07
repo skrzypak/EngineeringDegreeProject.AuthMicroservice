@@ -10,14 +10,4 @@ namespace InventoryMicroservice.Core.Fluent.Enums
         Men,
         Woman
     }
-
-    public enum HashAlgorithmType
-    {
-        sha256crypt,
-        sha512crypt,
-        sha3_256crypt,
-        sha3_512crypt,
-        shake128crypt,
-        shake256crypt
-    }
 }

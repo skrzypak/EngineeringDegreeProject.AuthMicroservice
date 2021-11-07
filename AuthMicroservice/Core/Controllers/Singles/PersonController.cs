@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AuthMicroservice.Core.Models.Dto.Person;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace AuthMicroservice.Core.Controllers.Singles
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class PersonController : ControllerBase
@@ -22,7 +24,7 @@ namespace AuthMicroservice.Core.Controllers.Singles
         [HttpGet]
         public ActionResult GetYourself()
         {
-            return Ok();
+            return Ok(1);
         }
 
         [HttpPatch]

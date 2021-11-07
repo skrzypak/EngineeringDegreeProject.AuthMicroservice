@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace AuthMicroservice.Core.Exceptions
 {
-    public class NotFoundException : Exception
+    public class AuthException : Exception
     {
-        public NotFoundException(string msg) : base(msg)
+        public AuthException(string msg) : base(msg)
         {
         }
     }

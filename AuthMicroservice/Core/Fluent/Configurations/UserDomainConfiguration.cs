@@ -23,7 +23,8 @@ namespace AuthMicroservice.Core.Fluent.Configurations
             modelBuilder.Property(u => u.IsEnabled).HasDefaultValue<bool?>(true).IsRequired();
             modelBuilder.Property(u => u.ExpiredDate).IsRequired(false);
 
-            modelBuilder.HasIndex(p => new { p.Username, p.PersonId }).IsUnique(true);
+            modelBuilder.HasIndex(p => p.Username).IsUnique(true);
+            modelBuilder.HasIndex(p => p.PersonId).IsUnique(true);
 
             modelBuilder.ToTable("UsersDomains");
             modelBuilder.Property(u => u.Id).HasColumnName("Id");

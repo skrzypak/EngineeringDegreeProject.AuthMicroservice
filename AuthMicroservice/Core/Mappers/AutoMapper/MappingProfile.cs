@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using AuthMicroservice.Core.Fluent.Entities;
+using AuthMicroservice.Core.Models.Dto.Person;
+using AutoMapper;
 
 namespace AuthMicroservice.Core.Mappers.AutoMapper
 {
@@ -6,6 +8,7 @@ namespace AuthMicroservice.Core.Mappers.AutoMapper
     {
         public MappingProfile()
         {
+            CreateMap<PersonCoreDto, Person>();
         }
     }
 }

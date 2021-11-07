@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using InventoryMicroservice.Core.Exceptions;
+using AuthMicroservice.Core.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -24,6 +24,16 @@ namespace AuthMicroservice.Core.Middlewares
             catch (NotFoundException e)
             {
                 context.Response.StatusCode = 404;
+                await context.Response.WriteAsync(e.Message);
+            }
+            catch (AuthException e)
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync(e.Message);
+            }
+            catch (RegisterException e)
+            {
+                context.Response.StatusCode = 400;
                 await context.Response.WriteAsync(e.Message);
             }
             catch (Exception e)

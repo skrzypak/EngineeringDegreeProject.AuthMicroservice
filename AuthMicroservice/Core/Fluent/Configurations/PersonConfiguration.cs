@@ -18,7 +18,7 @@ namespace AuthMicroservice.Core.Fluent.Configurations
             modelBuilder.Property(p => p.FirstName).HasMaxLength(300).IsRequired();
             modelBuilder.Property(p => p.LastName).HasMaxLength(300).IsRequired();
             modelBuilder.Ignore(p => p.FullName);
-            modelBuilder.Property(p => p.Gender).HasConversion<string>().HasMaxLength(1).IsRequired();
+            modelBuilder.Property(p => p.Gender).HasConversion<string>().HasMaxLength(5).IsRequired();
             modelBuilder.Property(p => p.Email).HasMaxLength(100).IsRequired();
             modelBuilder.Property(p => p.PhoneNumber).HasMaxLength(12).IsRequired(false);
             modelBuilder.Ignore(p => p.Address);

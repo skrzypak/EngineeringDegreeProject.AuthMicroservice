@@ -17,10 +17,9 @@ namespace AuthMicroservice.Core.Fluent.Configurations
 
             modelBuilder.Property(u => u.UserDomainId).IsRequired();
 
+            modelBuilder.Property(u => u.Password).IsRequired();
             modelBuilder.Property(u => u.IsExpired).HasDefaultValue<bool>(false).IsRequired();
             modelBuilder.Property(u => u.ExpiredDate).IsRequired(false);
-            modelBuilder.Property(u => u.Salt).HasMaxLength(32).IsRequired();
-            modelBuilder.Property(u => u.HashAlgorithm).HasConversion<ushort>().IsRequired();
 
             modelBuilder.ToTable("UsersCredentials");
             modelBuilder.Property(u => u.Id).HasColumnName("Id");
@@ -28,8 +27,6 @@ namespace AuthMicroservice.Core.Fluent.Configurations
             modelBuilder.Property(u => u.Password).HasColumnName("Password");
             modelBuilder.Property(u => u.IsExpired).HasColumnName("IsExpired");
             modelBuilder.Property(u => u.ExpiredDate).HasColumnName("ExpiredDate");
-            modelBuilder.Property(u => u.Salt).HasColumnName("Salt");
-            modelBuilder.Property(u => u.HashAlgorithm).HasColumnName("HashAlgorithm");
         }
     }
 }

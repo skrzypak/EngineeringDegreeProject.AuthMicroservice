@@ -9,8 +9,7 @@ namespace AuthMicroservice.Core.Models.Dto
 {
     public class RegisterDto
     {
-        public int Id { get; set; }
-        [MaxLength(64), MinLength(1)]
+        [MaxLength(32), MinLength(1)]
         public string Username { get; set; }
         [MaxLength(64), MinLength(8)]
         public string Password { get; set; }
