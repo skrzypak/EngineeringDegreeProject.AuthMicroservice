@@ -18,66 +18,222 @@ namespace AuthMicroservice.Core.Services
         private readonly ILogger<EnterpriseService> _logger;
         private readonly MicroserviceContext _context;
         private readonly IMapper _mapper;
-        private readonly AuthenticationSettings _authenticationSettings;
         private readonly IUserContextService _userContextService;
 
         public EnterpriseService(
             ILogger<EnterpriseService> logger,
             MicroserviceContext context,
             IMapper mapper,
-            AuthenticationSettings authenticationSettings,
             IUserContextService userContextService)
         {
             _logger = logger;
             _context = context;
             _mapper = mapper;
-            _authenticationSettings = authenticationSettings;
             _userContextService = userContextService;
         }
 
         public void AddEnterpriseUser(int enterpriseId, string username, string email)
         {
-            throw new NotImplementedException();
+            if(username.Length > 0 && email.Length > 0)
+            {
+                throw new ArgumentException("Select username or email, not both");
+            }
+
+            int? newMemberUserDomain = _context.UsersDomains
+                .AsNoTracking()
+                .Include(mud => mud.Person)
+                .Where(mud => username.Length > 0 ? mud.Username == username : mud.Person.Email == email)
+                .Select(mud => mud.Id)
+                .FirstOrDefault();
+
+            if (newMemberUserDomain is null)
+            {
+                throw new NotFoundException($"NOT FOUND user with username: {username} or email: {email}");
+            }
+
+            var model = _context.Enterprises
+                .Where(e => 
+                    e.Id == enterpriseId &&
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId))
+                .FirstOrDefault();
+
+            if (model is null)
+            {
+                throw new NotFoundException($"NOT FOUND enterprise with id {enterpriseId}");
+            }
+
+            model.EnterprisesToUsersDomains.Add(new EnterpriseToUserDomain {
+                EnterpriseId = model.Id,
+                UserDomainId = (int) newMemberUserDomain
+            });
+
+            _context.SaveChanges();
         }
 
         public int Create(EnterpriseCoreDto dto)
         {
-            throw new NotImplementedException();
+            var model = _mapper.Map<EnterpriseCoreDto, Enterprise>(dto);
+
+            model.EnterprisesToUsersDomains = new HashSet<EnterpriseToUserDomain>
+            {
+                new EnterpriseToUserDomain
+                {
+                    UserDomainId = (int) _userContextService.GetUserDomainId               
+                }
+            };
+
+            _context.Enterprises.Add(model);
+            _context.SaveChanges();
+
+            return model.Id;
         }
 
         public void Delete(int enterpriseId)
         {
-            throw new NotImplementedException();
+            var model = _context.Enterprises
+                .FirstOrDefault(e => e.Id == enterpriseId &&
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                );
+
+            if (model is null )
+            {
+                throw new NotFoundException($"NOT FOUND enterprise with id {enterpriseId}");
+            }
+
+            _context.Enterprises.Remove(model);
+            _context.SaveChanges();
         }
 
         public object Get()
         {
-            throw new NotImplementedException();
+            var dtos = _context.EnterprisesToUsersDomains
+                .AsNoTracking()
+                .Include(e2u => e2u.UserDomain)
+                .Include(e2u => e2u.Enterprise)
+                .Where(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                .Select(e2u => new
+                {
+                    e2u.EnterpriseId,
+                    e2u.Enterprise.CompanyName,
+                    e2u.Enterprise.Address
+                })
+                .ToList();
+
+            if (dtos is null || dtos.Count() == 0)
+            {
+                throw new NotFoundException($"NOT FOUND any enterprise for user {_userContextService.GetUserDomainId}");
+            }
+
+            return dtos;
         }
 
         public object GetById(int enterpriseId)
         {
-            throw new NotImplementedException();
-        }
+            var dto = _context.EnterprisesToUsersDomains
+                .AsNoTracking()
+                .Include(e2u => e2u.UserDomain)
+                .Include(e2u => e2u.Enterprise)
+                .Where(e2u => 
+                    e2u.UserDomainId == _userContextService.GetUserDomainId &&
+                    e2u.EnterpriseId == enterpriseId
+                )
+                .Select(e2u => new
+                {
+                    e2u.EnterpriseId,
+                    e2u.Enterprise.Nip,
+                    e2u.Enterprise.CompanyName,
+                    e2u.Enterprise.Email,
+                    e2u.Enterprise.PhoneNumber,
+                    e2u.Enterprise.StreetAddress,
+                    e2u.Enterprise.PostalCode,
+                    e2u.Enterprise.City,
+                    e2u.Enterprise.State,
+                    e2u.Enterprise.Address
+                })
+                .FirstOrDefault();
 
-        public object GetEnterpriseUserById(int enterpriseId, int enterpriseUserId)
-        {
-            throw new NotImplementedException();
+            if (dto is null)
+            {
+                throw new NotFoundException($"Enterprise with id {enterpriseId} NOT FOUND");
+            }
+
+            return dto;
         }
 
         public object GetEnterpriseUsers(int enterpriseId)
         {
-            throw new NotImplementedException();
+            var dto = _context.Enterprises
+                .AsNoTracking()
+                .Include(e => e.EnterprisesToUsersDomains)
+                    .ThenInclude(e2u => e2u.UserDomain)
+                        .ThenInclude(u => u.Person)
+                .Where(e =>
+                    e.Id == enterpriseId &&
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                )
+                .SelectMany(e => e.EnterprisesToUsersDomains.Select(e2u => new {
+                    EnterpriseUserId = e2u.Id,
+                    e2u.UserDomain.Person.FirstName,
+                    e2u.UserDomain.Person.LastName,
+                    e2u.UserDomain.Person.FullName,
+                    e2u.UserDomain.Person.Email
+                }))
+                .FirstOrDefault();
+
+            if (dto is null)
+            {
+                throw new NotFoundException($"NOT FOUND any user in enterprise with id {enterpriseId}");
+            }
+
+            return dto;
+        }
+
+        public void LeftFromEnterprise(int enterpriseId)
+        {
+            RemoveEnterpriseUser(enterpriseId, (int) _userContextService.GetUserDomainId);
         }
 
         public void RemoveEnterpriseUser(int enterpriseId, int enterpriseUserId)
         {
-            throw new NotImplementedException();
+            var model = _context.Enterprises
+                 .AsNoTracking()
+                 .FirstOrDefault(e => e.Id == enterpriseId &&
+                     e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                 );
+
+            if (model is null)
+            {
+                throw new NotFoundException($"NOT FOUND enterprise with id {enterpriseId}");
+            }
+
+            var itemToDelete = model.EnterprisesToUsersDomains
+                .Where(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId).First();
+
+            model.EnterprisesToUsersDomains.Remove(itemToDelete);
+
+            _context.SaveChanges();
         }
 
-        public int Update(int enterpriseId, EnterpriseCoreDto dto)
+        public void Update(int enterpriseId, EnterpriseCoreDto dto)
         {
-            throw new NotImplementedException();
+            var oldModel = _context.Enterprises
+                .AsNoTracking()
+                .FirstOrDefault(e => e.Id == enterpriseId &&
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                );
+
+            if (oldModel is null)
+            {
+                throw new NotFoundException($"NOT FOUND enterprise with id {enterpriseId}");
+            }
+
+            var newModel = _mapper.Map<EnterpriseCoreDto, Enterprise>(dto);
+
+            newModel.Id = oldModel.Id;
+            newModel.EnterprisesToUsersDomains = oldModel.EnterprisesToUsersDomains;
+
+            _context.Enterprises.Update(newModel);
+            _context.SaveChanges();
         }
     }
 }

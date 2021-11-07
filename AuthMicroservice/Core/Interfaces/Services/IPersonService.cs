@@ -9,6 +9,6 @@ namespace AuthMicroservice.Core.Interfaces.Services
     public interface IPersonService
     {
         public object GetYourself();
-        public object Update(PersonCoreDto dto);
+        public void Update(PersonCoreDto dto);
     }
 }

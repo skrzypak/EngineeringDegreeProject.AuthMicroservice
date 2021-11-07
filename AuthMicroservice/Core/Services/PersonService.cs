@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using AuthMicroservice.Core.Exceptions;
 using AuthMicroservice.Core.Fluent;
-using AuthMicroservice.Core.Fluent.Entities;
 using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto.Person;
 using AutoMapper;
@@ -34,12 +33,57 @@ namespace AuthMicroservice.Core.Services
 
         public object GetYourself()
         {
-            throw new NotImplementedException();
+            var dto = _context.UsersDomains
+                .AsNoTracking()
+                .Include(ud => ud.Person)
+                .Where(ud => ud.Id == _userContextService.GetUserDomainId)
+                .Select(ud => new
+                {
+                    ud.Person.FirstName,
+                    ud.Person.LastName,
+                    ud.Person.FullName,
+                    ud.Person.Gender,
+                    ud.Person.Email,
+                    ud.Person.PhoneNumber,
+                    ud.Person.StreetAddress,
+                    ud.Person.PostalCode,
+                    ud.Person.City,
+                    ud.Person.State,
+                    ud.Person.Address
+                })
+                .FirstOrDefault();
+
+            if (dto is null)
+            {
+                throw new AuthException("JWT");
+            }
+
+            return dto;
         }
 
-        public object Update(PersonCoreDto dto)
+        public void Update(PersonCoreDto dto)
         {
-            throw new NotImplementedException();
+            var model = _context.UsersDomains
+                .Include(ud => ud.Person)
+                .Where(ud => ud.Id == _userContextService.GetUserDomainId)
+                .FirstOrDefault();
+
+            if (model is null)
+            {
+                throw new AuthException("JWT");
+            }
+
+            model.Person.FirstName = dto.FirstName;
+            model.Person.LastName = dto.LastName;
+            model.Person.Gender = dto.Gender;
+            model.Person.Email = dto.Email;
+            model.Person.PhoneNumber = dto.PhoneNumber;
+            model.Person.StreetAddress = dto.StreetAddress;
+            model.Person.PostalCode = dto.PostalCode;
+            model.Person.City = dto.City;
+            model.Person.State = dto.State;
+
+            _context.SaveChanges();
         }
     }
 }

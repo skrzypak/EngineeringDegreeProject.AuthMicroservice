@@ -11,11 +11,11 @@ namespace AuthMicroservice.Core.Interfaces.Services
         public object Get();
         public object GetById(int enterpriseId);
         public int Create(EnterpriseCoreDto dto);
-        public int Update(int enterpriseId, EnterpriseCoreDto dto);
+        public void Update(int enterpriseId, EnterpriseCoreDto dto);
         public void Delete(int enterpriseId);
         public void AddEnterpriseUser(int enterpriseId, string username, string email);
         public object GetEnterpriseUsers(int enterpriseId);
-        public object GetEnterpriseUserById(int enterpriseId, int enterpriseUserId);
         public void RemoveEnterpriseUser(int enterpriseId, int enterpriseUserId);
+        public void LeftFromEnterprise(int enterpriseId);
     }
 }

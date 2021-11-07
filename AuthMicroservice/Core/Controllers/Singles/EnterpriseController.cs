@@ -73,17 +73,17 @@ namespace AuthMicroservice.Core.Controllers.Singles
             return Ok(response); ;
         }
 
-        [HttpGet("{enterpriseId}/person")]
-        public ActionResult<object> GetEnterpriseUserById([FromRoute] int enterpriseId, [FromQuery] int enterpriseUserId)
-        {
-            var response = _enterpriseService.GetEnterpriseUserById(enterpriseId, enterpriseUserId);
-            return Ok(response);
-        }
-
         [HttpDelete("{enterpriseId}/user")]
         public ActionResult RemoveEnterpriseUser([FromRoute] int enterpriseId, [FromQuery] int enterpriseUserId)
         {
             _enterpriseService.RemoveEnterpriseUser(enterpriseId, enterpriseUserId);
+            return NoContent();
+        }
+
+        [HttpDelete("{enterpriseId}/left")]
+        public ActionResult LeftFromEnterprise([FromRoute] int enterpriseId)
+        {
+            _enterpriseService.LeftFromEnterprise(enterpriseId);
             return NoContent();
         }
     }
