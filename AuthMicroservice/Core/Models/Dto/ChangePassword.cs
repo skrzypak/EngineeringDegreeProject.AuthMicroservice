@@ -12,5 +12,7 @@ namespace AuthMicroservice.Core.Models.Dto
         public string CurrentPassword { get; set; }
         [MaxLength(64), MinLength(8)]
         public string NewPassword { get; set; }
+        [MaxLength(64), MinLength(8)]
+        public string ConfirmNewPassword { get; set; }
     }
 }

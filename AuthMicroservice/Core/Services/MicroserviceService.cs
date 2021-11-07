@@ -25,29 +25,87 @@ namespace AuthMicroservice.Core.Services
         private readonly IMapper _mapper;
         private readonly IPasswordHasher<UserDomain> _passwordHasher;
         private readonly AuthenticationSettings _authenticationSettings;
+        private readonly IUserContextService _userContextService;
 
         public MicroserviceService(
             ILogger<MicroserviceService> logger,
             MicroserviceContext context,
             IMapper mapper,
             IPasswordHasher<UserDomain> passwordHasher, 
-            AuthenticationSettings authenticationSettings)
+            AuthenticationSettings authenticationSettings,
+            IUserContextService userContextService)
         {
             _logger = logger;
             _context = context;
             _mapper = mapper;
             _passwordHasher = passwordHasher;
             _authenticationSettings = authenticationSettings;
+            _userContextService = userContextService;
         }
 
         public void ChangePassword(ChangePassword dto)
         {
-            throw new NotImplementedException();
+            if (dto.NewPassword != dto.ConfirmNewPassword)
+            {
+                throw new RegisterException("Passwords not matching");
+            }
+
+            var userDomain = _context.UsersDomains
+                .Include(u => u.UserCredentials)
+                .Where(u => u.IsEnabled == true && u.IsExpired == false && u.IsLocked == false)
+                .Where(u => u.UserCredentials.Where(uc => uc.IsExpired == false).Count() > 0)
+                .FirstOrDefault(u => u.Id == _userContextService.GetUserDomainId);
+
+            if (userDomain is null)
+            {
+                throw new AuthException("JWT");
+            }
+
+            var hashPassword = userDomain.UserCredentials.Where(uc => uc.IsExpired == false).Select(uc => uc.Password).First();
+            var result = _passwordHasher.VerifyHashedPassword(userDomain, hashPassword, dto.CurrentPassword);
+
+            if (result == PasswordVerificationResult.Failed)
+            {
+                throw new AuthException("Invalid current password");
+            }
+
+            userDomain.UserCredentials.ToList().ForEach(uc => {
+                uc.ExpiredDate = DateTime.Now;
+                uc.IsExpired = true;
+            });
+
+            userDomain.UserCredentials.Add(new UserCredential()
+            {
+                Password = _passwordHasher.HashPassword(userDomain, dto.NewPassword)
+            });
+
+            _context.UsersDomains.Update(userDomain);
+            _context.SaveChanges();
         }
 
         public void CloseAccount()
         {
-            throw new NotImplementedException();
+            var userDomain = _context.UsersDomains
+               .Include(u => u.UserCredentials)
+               .Where(u => u.IsEnabled == true)
+               .FirstOrDefault(u => u.Id == _userContextService.GetUserDomainId);
+
+            if (userDomain is null)
+            {
+                throw new AuthException("JWT");
+            }
+
+            userDomain.UserCredentials.ToList().ForEach(uc => {
+                uc.ExpiredDate = DateTime.Now;
+                uc.IsExpired = true;
+            });
+
+            userDomain.IsEnabled = false;
+            userDomain.IsExpired = true;
+            userDomain.IsLocked = true;
+
+            _context.UsersDomains.Update(userDomain);
+            _context.SaveChanges();
         }
 
         public string Login(LoginDto dto)
@@ -57,6 +115,7 @@ namespace AuthMicroservice.Core.Services
                 .Include(u => u.UserCredentials)
                 .Include(u => u.Person)
                 .Include(u => u.EnterprisesToUsersDomains)
+                .Where(u => u.IsEnabled == true && u.IsExpired == false && u.IsLocked == false)
                 .Where(u => u.UserCredentials.Where(uc => uc.IsExpired == false).Count() > 0)
                 .FirstOrDefault(u => u.Username == dto.Username);
 
@@ -65,7 +124,7 @@ namespace AuthMicroservice.Core.Services
                 throw new AuthException("Invalid username or password");
             }
 
-            var hashPassword = userDomain.UserCredentials.Select(uc => uc.Password).First();
+            var hashPassword = userDomain.UserCredentials.Where(uc => uc.IsExpired == false).Select(uc => uc.Password).First();
             var result = _passwordHasher.VerifyHashedPassword(userDomain, hashPassword, dto.Password);
 
             if (result == PasswordVerificationResult.Failed)
