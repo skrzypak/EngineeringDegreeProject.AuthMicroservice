@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto.Enterprise;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,64 +16,75 @@ namespace AuthMicroservice.Core.Controllers.Singles
     public class EnterpriseController : ControllerBase
     {
         private readonly ILogger<EnterpriseController> _logger;
+        private readonly IEnterpriseService _enterpriseService;
 
-        public EnterpriseController(ILogger<EnterpriseController> logger)
+        public EnterpriseController(ILogger<EnterpriseController> logger, IEnterpriseService enterpriseService)
         {
             _logger = logger;
+            _enterpriseService = enterpriseService;
         }
 
         [HttpGet]
         public ActionResult<object> Get()
         {
-            return Ok();
+            var response = _enterpriseService.Get();
+            return Ok(response);
         }
 
         [HttpGet("{enterpriseId}")]
-        public ActionResult<object> GetById(int enterpriseId)
+        public ActionResult<object> GetById([FromRoute] int enterpriseId)
         {
-            return Ok();
+            var response = _enterpriseService.GetById(enterpriseId);
+            return Ok(response);
         }
 
         [HttpPost]
-        public ActionResult<int> Create(EnterpriseCoreDto dto)
+        public ActionResult<int> Create([FromBody] EnterpriseCoreDto dto)
         {
-            return NoContent();
+            var id = _enterpriseService.Create(dto);
+            return CreatedAtAction(nameof(GetById), new { enterpriseId = id }, null);
         }
 
         [HttpPut("{enterpriseId}")]
-        public ActionResult<int> Update(int enterpriseId, EnterpriseCoreDto dto)
+        public ActionResult<int> Update([FromRoute] int enterpriseId, [FromBody] EnterpriseCoreDto dto)
         {
+            _enterpriseService.Update(enterpriseId, dto);
             return NoContent();
         }
 
         [HttpDelete("{enterpriseId}")]
-        public ActionResult Delete(int enterpriseId)
+        public ActionResult Delete([FromRoute] int enterpriseId)
         {
+            _enterpriseService.Delete(enterpriseId);
             return NoContent();
         }
 
         [HttpPatch("{enterpriseId}/user")]
-        public ActionResult AddEnterpriseUser(int enterpriseId, [FromQuery] string username, [FromQuery] string email)
+        public ActionResult AddEnterpriseUser([FromRoute] int enterpriseId, [FromQuery] string username, [FromQuery] string email)
         {
-            throw new NotImplementedException();
+            _enterpriseService.AddEnterpriseUser(enterpriseId, username, email);
+            return NoContent();
         }
 
         [HttpGet("{enterpriseId}/user")]
-        public ActionResult<object> GetEnterprisePersons(int enterpriseId)
+        public ActionResult<object> GetEnterpriseUsers([FromRoute] int enterpriseId)
         {
-            return Ok();
+            var response = _enterpriseService.GetEnterpriseUsers(enterpriseId);
+            return Ok(response); ;
         }
 
         [HttpGet("{enterpriseId}/person")]
-        public ActionResult<object> GetEnterprisePersonById(int enterpriseId, [FromQuery] string personId)
+        public ActionResult<object> GetEnterpriseUserById([FromRoute] int enterpriseId, [FromQuery] int enterpriseUserId)
         {
-            return Ok();
+            var response = _enterpriseService.GetEnterpriseUserById(enterpriseId, enterpriseUserId);
+            return Ok(response);
         }
 
         [HttpDelete("{enterpriseId}/user")]
-        public ActionResult RemoveEnterprisePerson(int enterpriseId, [FromQuery] string personId)
+        public ActionResult RemoveEnterpriseUser([FromRoute] int enterpriseId, [FromQuery] int enterpriseUserId)
         {
-            throw new NotImplementedException();
+            _enterpriseService.RemoveEnterpriseUser(enterpriseId, enterpriseUserId);
+            return NoContent();
         }
     }
 }

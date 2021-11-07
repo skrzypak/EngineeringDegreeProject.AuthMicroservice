@@ -109,6 +109,8 @@ namespace AuthMicroservice
             services.AddScoped<IUserContextService, UserContextService>();
             services.AddHttpContextAccessor();
 
+            services.AddScoped<IEnterpriseService, EnterpriseService>();
+            services.AddScoped<IPersonService, PersonService>();
             services.AddScoped<IMicroserviceService, MicroserviceService>();
         }
 

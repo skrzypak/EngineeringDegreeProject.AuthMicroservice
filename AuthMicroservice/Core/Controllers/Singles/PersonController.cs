@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto.Person;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,22 +16,26 @@ namespace AuthMicroservice.Core.Controllers.Singles
     public class PersonController : ControllerBase
     {
         private readonly ILogger<PersonController> _logger;
+        private readonly IPersonService _personService;
 
-        public PersonController(ILogger<PersonController> logger)
+        public PersonController(ILogger<PersonController> logger, IPersonService personService)
         {
             _logger = logger;
+            _personService = personService;
         }
 
         [HttpGet]
-        public ActionResult GetYourself()
+        public ActionResult<object> GetYourself()
         {
-            return Ok(1);
+            var response = _personService.GetYourself();
+            return Ok(response);
         }
 
         [HttpPatch]
-        public ActionResult Update(int personId, PersonCoreDto dto)
+        public ActionResult Update([FromBody] PersonCoreDto dto)
         {
-            return Ok();
+            _personService.Update(dto);
+            return NoContent();
         }
     }
 }
