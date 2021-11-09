@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Authentication;
 using AuthMicroservice.Core.Exceptions;
 using AuthMicroservice.Core.Fluent;
 using AuthMicroservice.Core.Interfaces.Services;
@@ -17,18 +18,18 @@ namespace AuthMicroservice.Core.Services
         private readonly ILogger<PersonService> _logger;
         private readonly MicroserviceContext _context;
         private readonly IMapper _mapper;
-        private readonly IUserContextService _userContextService;
+        private readonly IHeaderContextService _headerContextService;
 
         public PersonService(
             ILogger<PersonService> logger,
             MicroserviceContext context,
             IMapper mapper,
-            IUserContextService userContextService)
+            IHeaderContextService headerContextService)
         {
             _logger = logger;
             _context = context;
             _mapper = mapper;
-            _userContextService = userContextService;
+            _headerContextService = headerContextService;
         }
 
         public object GetYourself()
@@ -36,7 +37,7 @@ namespace AuthMicroservice.Core.Services
             var dto = _context.UsersDomains
                 .AsNoTracking()
                 .Include(ud => ud.Person)
-                .Where(ud => ud.Id == _userContextService.GetUserDomainId)
+                .Where(ud => ud.Id == _headerContextService.GetUserDomainId())
                 .Select(ud => new
                 {
                     ud.Person.FirstName,
@@ -65,7 +66,7 @@ namespace AuthMicroservice.Core.Services
         {
             var model = _context.UsersDomains
                 .Include(ud => ud.Person)
-                .Where(ud => ud.Id == _userContextService.GetUserDomainId)
+                .Where(ud => ud.Id == _headerContextService.GetUserDomainId())
                 .FirstOrDefault();
 
             if (model is null)

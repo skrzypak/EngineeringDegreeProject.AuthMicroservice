@@ -4,15 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace AuthMicroservice.Core.Controllers
 {
-    [Authorize]
     [ApiController]
-    [Route("[controller]")]
+    [Route("/api/auth/1.0.0/msv")]
     public class MicroserviceController : ControllerBase
     {
         private readonly ILogger<MicroserviceController> _logger;
@@ -24,34 +22,17 @@ namespace AuthMicroservice.Core.Controllers
             _microserviceService = microserviceService;
         }
 
-        [AllowAnonymous]
-        [HttpPost("register")]
+        [HttpPost("no/register")]
         public ActionResult Register([FromBody] RegisterDto dto)
         {
             _microserviceService.Register(dto);
             return NoContent();
         }
 
-        [AllowAnonymous]
-        [HttpPost("login")]
+        [HttpPost("no/login")]
         public ActionResult Login([FromBody] LoginDto dto)
         {
             string token = _microserviceService.Login(dto);
-            return Ok(token);
-        }
-
-        [AllowAnonymous]
-        [HttpPost("refresh-login")]
-        public ActionResult RefreshLogin()
-        {
-            string token = _microserviceService.RefreshLogin();
-            return Ok(token);
-        }
-
-        [HttpPost("logout")]
-        public ActionResult Logout()
-        {
-            string token = _microserviceService.Logout();
             return Ok(token);
         }
 

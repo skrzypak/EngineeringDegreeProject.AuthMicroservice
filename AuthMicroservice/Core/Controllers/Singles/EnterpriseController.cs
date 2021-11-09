@@ -4,15 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto.Enterprise;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace AuthMicroservice.Core.Controllers.Singles
 {
-    [Authorize]
     [ApiController]
-    [Route("[controller]")]
+    [Route("/api/auth/1.0.0/enterprises")]
     public class EnterpriseController : ControllerBase
     {
         private readonly ILogger<EnterpriseController> _logger;
@@ -59,21 +57,21 @@ namespace AuthMicroservice.Core.Controllers.Singles
             return NoContent();
         }
 
-        [HttpPatch("{enterpriseId}/user")]
+        [HttpPost("{enterpriseId}/users")]
         public ActionResult AddEnterpriseUser([FromRoute] int enterpriseId, [FromQuery] string username, [FromQuery] string email)
         {
             _enterpriseService.AddEnterpriseUser(enterpriseId, username, email);
             return NoContent();
         }
 
-        [HttpGet("{enterpriseId}/user")]
+        [HttpGet("{enterpriseId}/users")]
         public ActionResult<object> GetEnterpriseUsers([FromRoute] int enterpriseId)
         {
             var response = _enterpriseService.GetEnterpriseUsers(enterpriseId);
             return Ok(response); ;
         }
 
-        [HttpDelete("{enterpriseId}/user")]
+        [HttpDelete("{enterpriseId}/users")]
         public ActionResult RemoveEnterpriseUser([FromRoute] int enterpriseId, [FromQuery] int enterpriseUserId)
         {
             _enterpriseService.RemoveEnterpriseUser(enterpriseId, enterpriseUserId);

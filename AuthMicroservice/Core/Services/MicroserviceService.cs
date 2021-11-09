@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using Authentication;
 using AuthMicroservice.Core.Exceptions;
 using AuthMicroservice.Core.Fluent;
 using AuthMicroservice.Core.Fluent.Entities;
@@ -25,7 +26,7 @@ namespace AuthMicroservice.Core.Services
         private readonly IMapper _mapper;
         private readonly IPasswordHasher<UserDomain> _passwordHasher;
         private readonly AuthenticationSettings _authenticationSettings;
-        private readonly IUserContextService _userContextService;
+        private readonly IHeaderContextService _headerContextService;
 
         public MicroserviceService(
             ILogger<MicroserviceService> logger,
@@ -33,14 +34,14 @@ namespace AuthMicroservice.Core.Services
             IMapper mapper,
             IPasswordHasher<UserDomain> passwordHasher, 
             AuthenticationSettings authenticationSettings,
-            IUserContextService userContextService)
+            IHeaderContextService headerContextService)
         {
             _logger = logger;
             _context = context;
             _mapper = mapper;
             _passwordHasher = passwordHasher;
             _authenticationSettings = authenticationSettings;
-            _userContextService = userContextService;
+            _headerContextService = headerContextService;
         }
 
         public void ChangePassword(ChangePassword dto)
@@ -54,7 +55,7 @@ namespace AuthMicroservice.Core.Services
                 .Include(u => u.UserCredentials)
                 .Where(u => u.IsEnabled == true && u.IsExpired == false && u.IsLocked == false)
                 .Where(u => u.UserCredentials.Where(uc => uc.IsExpired == false).Count() > 0)
-                .FirstOrDefault(u => u.Id == _userContextService.GetUserDomainId);
+                .FirstOrDefault(u => u.Id == _headerContextService.GetUserDomainId());
 
             if (userDomain is null)
             {
@@ -88,7 +89,7 @@ namespace AuthMicroservice.Core.Services
             var userDomain = _context.UsersDomains
                .Include(u => u.UserCredentials)
                .Where(u => u.IsEnabled == true)
-               .FirstOrDefault(u => u.Id == _userContextService.GetUserDomainId);
+               .FirstOrDefault(u => u.Id == _headerContextService.GetUserDomainId());
 
             if (userDomain is null)
             {
@@ -145,10 +146,10 @@ namespace AuthMicroservice.Core.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, userDomain.Id.ToString()),
-                    new Claim(ClaimTypes.Name, userDomain.Person.FullName),
-                    new Claim(ClaimTypes.Role, "user"),
-                    new Claim("Enterprises", userDomain.EnterprisesToUsersDomains.Count > 0 ?
+                    new Claim("claim_nameid", userDomain.Id.ToString()),
+                    new Claim("claim_unique_name", userDomain.Person.FullName),
+                    new Claim("claim_role", "user"),
+                    new Claim("claim_enterprises", userDomain.EnterprisesToUsersDomains.Count > 0 ?
                         string.Join(",", userDomain.EnterprisesToUsersDomains.Select(e2u => e2u.EnterpriseId)) : ""
                     )
                 }),
@@ -184,16 +185,6 @@ namespace AuthMicroservice.Core.Services
 
             _context.UsersDomains.Add(userDomain);
             _context.SaveChanges();
-        }
-
-        public string RefreshLogin()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string Logout()
-        {
-            throw new NotImplementedException();
         }
     }
 }

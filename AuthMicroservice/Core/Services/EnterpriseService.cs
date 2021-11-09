@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Authentication;
 using AuthMicroservice.Core.Exceptions;
 using AuthMicroservice.Core.Fluent;
 using AuthMicroservice.Core.Fluent.Entities;
@@ -18,18 +18,18 @@ namespace AuthMicroservice.Core.Services
         private readonly ILogger<EnterpriseService> _logger;
         private readonly MicroserviceContext _context;
         private readonly IMapper _mapper;
-        private readonly IUserContextService _userContextService;
+        private readonly IHeaderContextService _headerContextService;
 
         public EnterpriseService(
             ILogger<EnterpriseService> logger,
             MicroserviceContext context,
             IMapper mapper,
-            IUserContextService userContextService)
+            IHeaderContextService headerContextService)
         {
             _logger = logger;
             _context = context;
             _mapper = mapper;
-            _userContextService = userContextService;
+            _headerContextService = headerContextService;
         }
 
         public void AddEnterpriseUser(int enterpriseId, string username, string email)
@@ -54,7 +54,7 @@ namespace AuthMicroservice.Core.Services
             var model = _context.Enterprises
                 .Where(e => 
                     e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId))
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId()))
                 .FirstOrDefault();
 
             if (model is null)
@@ -78,7 +78,7 @@ namespace AuthMicroservice.Core.Services
             {
                 new EnterpriseToUserDomain
                 {
-                    UserDomainId = (int) _userContextService.GetUserDomainId               
+                    UserDomainId = (int) _headerContextService.GetUserDomainId()
                 }
             };
 
@@ -92,7 +92,7 @@ namespace AuthMicroservice.Core.Services
         {
             var model = _context.Enterprises
                 .FirstOrDefault(e => e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
                 );
 
             if (model is null )
@@ -110,7 +110,7 @@ namespace AuthMicroservice.Core.Services
                 .AsNoTracking()
                 .Include(e2u => e2u.UserDomain)
                 .Include(e2u => e2u.Enterprise)
-                .Where(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                .Where(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
                 .Select(e2u => new
                 {
                     e2u.EnterpriseId,
@@ -121,7 +121,7 @@ namespace AuthMicroservice.Core.Services
 
             if (dtos is null || dtos.Count() == 0)
             {
-                throw new NotFoundException($"NOT FOUND any enterprise for user {_userContextService.GetUserDomainId}");
+                throw new NotFoundException($"NOT FOUND any enterprise for user {_headerContextService.GetUserDomainId()}");
             }
 
             return dtos;
@@ -134,7 +134,7 @@ namespace AuthMicroservice.Core.Services
                 .Include(e2u => e2u.UserDomain)
                 .Include(e2u => e2u.Enterprise)
                 .Where(e2u => 
-                    e2u.UserDomainId == _userContextService.GetUserDomainId &&
+                    e2u.UserDomainId == _headerContextService.GetUserDomainId() &&
                     e2u.EnterpriseId == enterpriseId
                 )
                 .Select(e2u => new
@@ -169,7 +169,7 @@ namespace AuthMicroservice.Core.Services
                         .ThenInclude(u => u.Person)
                 .Where(e =>
                     e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
                 )
                 .SelectMany(e => e.EnterprisesToUsersDomains.Select(e2u => new {
                     EnterpriseUserId = e2u.Id,
@@ -190,7 +190,7 @@ namespace AuthMicroservice.Core.Services
 
         public void LeftFromEnterprise(int enterpriseId)
         {
-            RemoveEnterpriseUser(enterpriseId, (int) _userContextService.GetUserDomainId);
+            RemoveEnterpriseUser(enterpriseId, (int) _headerContextService.GetUserDomainId());
         }
 
         public void RemoveEnterpriseUser(int enterpriseId, int enterpriseUserId)
@@ -198,7 +198,7 @@ namespace AuthMicroservice.Core.Services
             var model = _context.Enterprises
                  .AsNoTracking()
                  .FirstOrDefault(e => e.Id == enterpriseId &&
-                     e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                     e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
                  );
 
             if (model is null)
@@ -207,7 +207,7 @@ namespace AuthMicroservice.Core.Services
             }
 
             var itemToDelete = model.EnterprisesToUsersDomains
-                .Where(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId).First();
+                .Where(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId()).First();
 
             model.EnterprisesToUsersDomains.Remove(itemToDelete);
 
@@ -219,7 +219,7 @@ namespace AuthMicroservice.Core.Services
             var oldModel = _context.Enterprises
                 .AsNoTracking()
                 .FirstOrDefault(e => e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _userContextService.GetUserDomainId)
+                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
                 );
 
             if (oldModel is null)

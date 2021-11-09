@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using Authentication;
 using AuthMicroservice.Core.Fluent;
 using AuthMicroservice.Core.Fluent.Entities;
 using AuthMicroservice.Core.Interfaces.Services;
@@ -13,13 +9,10 @@ using AuthMicroservice.Core.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 namespace AuthMicroservice
@@ -36,29 +29,17 @@ namespace AuthMicroservice
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            #region Authentication
+            services.Configure<ApplicationOptions>(Configuration.GetSection("ApplicationOptions"));
+            services.AddScoped<IPFilterMiddleware>();
 
             var authenticationSettings = new AuthenticationSettings();
             Configuration.GetSection("Authentication").Bind(authenticationSettings);
             services.AddSingleton(authenticationSettings);
 
-            services.AddAuthentication(option =>
-            {
-                option.DefaultAuthenticateScheme = "Bearer";
-                option.DefaultScheme = "Bearer";
-                option.DefaultChallengeScheme = "Bearer";
-            }).AddJwtBearer(cfg =>
-            {
-                cfg.RequireHttpsMetadata = false;
-                cfg.SaveToken = true;
-                cfg.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = authenticationSettings.JwtIssuer,
-                    ValidAudience = authenticationSettings.JwtIssuer,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticationSettings.JwtKey)),
-                };
-            });
+            services.AddScoped<IHeaderContextService, HeaderContextService>();
+            services.AddHttpContextAccessor();
+            #endregion 
 
             services.AddDbContext<MicroserviceContext>(options =>
             {
@@ -73,6 +54,7 @@ namespace AuthMicroservice
             services.AddScoped<ErrorHandlingMiddleware>();
             services.AddAutoMapper(this.GetType().Assembly);
 
+            #region swagger
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthMicroservice", Version = "v1" });
@@ -105,9 +87,7 @@ namespace AuthMicroservice
                       }
                     });
             });
-
-            services.AddScoped<IUserContextService, UserContextService>();
-            services.AddHttpContextAccessor();
+            #endregion
 
             services.AddScoped<IEnterpriseService, EnterpriseService>();
             services.AddScoped<IPersonService, PersonService>();
@@ -124,20 +104,11 @@ namespace AuthMicroservice
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AuthMicroservice v1"));
             }
 
+            app.UseMiddleware<IPFilterMiddleware>();
             app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
-            // global cors policy
-            app.UseCors(x => x
-                .SetIsOriginAllowed(origin => true)
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
-
-            app.UseAuthentication();
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
