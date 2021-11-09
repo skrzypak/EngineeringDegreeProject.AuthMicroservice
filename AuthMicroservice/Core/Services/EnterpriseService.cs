@@ -34,24 +34,25 @@ namespace AuthMicroservice.Core.Services
 
         public void AddEnterpriseUser(int enterpriseId, string username, string email)
         {
-            if(username.Length > 0 && email.Length > 0)
+            if(string.IsNullOrEmpty(username) && string.IsNullOrEmpty(email))
             {
                 throw new ArgumentException("Select username or email, not both");
             }
 
-            int? newMemberUserDomain = _context.UsersDomains
+            int newMemberUserDomainId = _context.UsersDomains
                 .AsNoTracking()
                 .Include(mud => mud.Person)
-                .Where(mud => username.Length > 0 ? mud.Username == username : mud.Person.Email == email)
+                .Where(mud => string.IsNullOrEmpty(email) ? mud.Username == username : mud.Person.Email == email)
                 .Select(mud => mud.Id)
                 .FirstOrDefault();
 
-            if (newMemberUserDomain is null)
+            if (newMemberUserDomainId == 0)
             {
                 throw new NotFoundException($"NOT FOUND user with username: {username} or email: {email}");
             }
 
             var model = _context.Enterprises
+                .Include(e => e.EnterprisesToUsersDomains)
                 .Where(e => 
                     e.Id == enterpriseId &&
                     e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId()))
@@ -62,9 +63,16 @@ namespace AuthMicroservice.Core.Services
                 throw new NotFoundException($"NOT FOUND enterprise with id {enterpriseId}");
             }
 
+            var exists = model.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == newMemberUserDomainId);
+
+            if (exists == true)
+            {
+                throw new NotFoundException($"User with username: {username} or email: {email} exists in enterprise with id {enterpriseId}");
+            }
+
             model.EnterprisesToUsersDomains.Add(new EnterpriseToUserDomain {
                 EnterpriseId = model.Id,
-                UserDomainId = (int) newMemberUserDomain
+                UserDomainId = newMemberUserDomainId
             });
 
             _context.SaveChanges();
@@ -171,16 +179,16 @@ namespace AuthMicroservice.Core.Services
                     e.Id == enterpriseId &&
                     e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
                 )
-                .SelectMany(e => e.EnterprisesToUsersDomains.Select(e2u => new {
-                    EnterpriseUserId = e2u.Id,
-                    e2u.UserDomain.Person.FirstName,
-                    e2u.UserDomain.Person.LastName,
-                    e2u.UserDomain.Person.FullName,
-                    e2u.UserDomain.Person.Email
+                .SelectMany(e => e.EnterprisesToUsersDomains.Select(ee => new
+                {
+                    EnterpriseUserId = ee.Id,
+                    ee.UserDomain.Person.FirstName,
+                    ee.UserDomain.Person.LastName,
+                    ee.UserDomain.Person.Email
                 }))
-                .FirstOrDefault();
+                .ToList();
 
-            if (dto is null)
+            if (dto is null || dto.Count() == 0)
             {
                 throw new NotFoundException($"NOT FOUND any user in enterprise with id {enterpriseId}");
             }
@@ -197,6 +205,7 @@ namespace AuthMicroservice.Core.Services
         {
             var model = _context.Enterprises
                  .AsNoTracking()
+                 .Include(e => e.EnterprisesToUsersDomains)
                  .FirstOrDefault(e => e.Id == enterpriseId &&
                      e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
                  );
