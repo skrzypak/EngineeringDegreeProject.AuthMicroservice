@@ -55,7 +55,8 @@ namespace AuthMicroservice.Core.Services
                 .Include(e => e.EnterprisesToUsersDomains)
                 .Where(e => 
                     e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId()))
+                    _headerContextService.GetEnterprisesIds().Contains(e.Id)
+                )
                 .FirstOrDefault();
 
             if (model is null)
@@ -99,8 +100,9 @@ namespace AuthMicroservice.Core.Services
         public void Delete(int enterpriseId)
         {
             var model = _context.Enterprises
-                .FirstOrDefault(e => e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
+                .FirstOrDefault(e => 
+                    e.Id == enterpriseId &&
+                    _headerContextService.GetEnterprisesIds().Contains(e.Id)
                 );
 
             if (model is null )
@@ -114,16 +116,15 @@ namespace AuthMicroservice.Core.Services
 
         public object Get()
         {
-            var dtos = _context.EnterprisesToUsersDomains
+            var dtos = _context.Enterprises
                 .AsNoTracking()
-                .Include(e2u => e2u.UserDomain)
-                .Include(e2u => e2u.Enterprise)
-                .Where(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
-                .Select(e2u => new
+                .Include(e => e.EnterprisesToUsersDomains)
+                .Where(e => _headerContextService.GetEnterprisesIds().Contains(e.Id))
+                .Select(e => new
                 {
-                    e2u.EnterpriseId,
-                    e2u.Enterprise.CompanyName,
-                    e2u.Enterprise.Address
+                    e.Id,
+                    e.CompanyName,
+                    e.Address
                 })
                 .ToList();
 
@@ -141,10 +142,7 @@ namespace AuthMicroservice.Core.Services
                 .AsNoTracking()
                 .Include(e2u => e2u.UserDomain)
                 .Include(e2u => e2u.Enterprise)
-                .Where(e2u => 
-                    e2u.UserDomainId == _headerContextService.GetUserDomainId() &&
-                    e2u.EnterpriseId == enterpriseId
-                )
+                .Where(e2u => e2u.Id == enterpriseId && _headerContextService.GetEnterprisesIds().Contains(e2u.EnterpriseId))
                 .Select(e2u => new
                 {
                     e2u.EnterpriseId,
@@ -177,7 +175,7 @@ namespace AuthMicroservice.Core.Services
                         .ThenInclude(u => u.Person)
                 .Where(e =>
                     e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
+                    _headerContextService.GetEnterprisesIds().Contains(e.Id)
                 )
                 .SelectMany(e => e.EnterprisesToUsersDomains.Select(ee => new
                 {
@@ -206,8 +204,9 @@ namespace AuthMicroservice.Core.Services
             var model = _context.Enterprises
                  .AsNoTracking()
                  .Include(e => e.EnterprisesToUsersDomains)
-                 .FirstOrDefault(e => e.Id == enterpriseId &&
-                     e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
+                 .FirstOrDefault(e => 
+                     e.Id == enterpriseId &&
+                     _headerContextService.GetEnterprisesIds().Contains(e.Id)
                  );
 
             if (model is null)
@@ -227,8 +226,9 @@ namespace AuthMicroservice.Core.Services
         {
             var oldModel = _context.Enterprises
                 .AsNoTracking()
-                .FirstOrDefault(e => e.Id == enterpriseId &&
-                    e.EnterprisesToUsersDomains.Any(e2u => e2u.UserDomainId == _headerContextService.GetUserDomainId())
+                .FirstOrDefault(e => 
+                    e.Id == enterpriseId &&
+                    _headerContextService.GetEnterprisesIds().Contains(e.Id)
                 );
 
             if (oldModel is null)

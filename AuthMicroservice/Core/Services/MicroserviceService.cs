@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using Authentication;
+using Authentication.Json;
 using AuthMicroservice.Core.Exceptions;
 using AuthMicroservice.Core.Fluent;
 using AuthMicroservice.Core.Fluent.Entities;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace AuthMicroservice.Core.Services
 {
@@ -149,8 +151,14 @@ namespace AuthMicroservice.Core.Services
                     new Claim("claim_nameid", userDomain.Id.ToString()),
                     new Claim("claim_unique_name", userDomain.Person.FullName),
                     new Claim("claim_role", "user"),
-                    new Claim("claim_enterprises", userDomain.EnterprisesToUsersDomains.Count > 0 ?
-                        string.Join(",", userDomain.EnterprisesToUsersDomains.Select(e2u => e2u.EnterpriseId)) : ""
+                    new Claim("claim_e2ud", userDomain.EnterprisesToUsersDomains.Count > 0 ?
+                        JsonConvert.SerializeObject (
+                            userDomain.EnterprisesToUsersDomains.Select(e2u => 
+                                new Claim_e2ud_item {
+                                    eudId = e2u.Id,
+                                    epsId = e2u.EnterpriseId,
+                                })
+                            ) : "[]"
                     )
                 }),
                 Audience = _authenticationSettings.JwtIssuer,

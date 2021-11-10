@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Authentication.Json;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace Authentication
 {
@@ -29,31 +31,28 @@ namespace Authentication
             return result ? int.Parse(claim) : null;
         }
 
-        public bool HasEnterprise(int enterpriseId) => GetEnterprisesIds().Any(i => i == enterpriseId);
+        public bool HasEnterprise(int enterpriseId) => GetClaim_e2ud().Any(i => i.epsId == enterpriseId);
+
+        public int GetEnterpriseUserDomainId(int enterpriseId) 
+            => GetClaim_e2ud().Where(i => i.epsId == enterpriseId).Select(i => i.eudId).FirstOrDefault();
 
         public List<int> GetEnterprisesIds()
+            => GetClaim_e2ud().Select(i => i.epsId).ToList();
+
+        public List<Claim_e2ud_item> GetClaim_e2ud()
         {
             if (Header is not null)
             {
                 Microsoft.Extensions.Primitives.StringValues claim;
-                var result = Header.TryGetValue("claim_enterprises", out claim);
+                var result = Header.TryGetValue("claim_e2ud", out claim);
 
                 if(result == false)
                 {
-                    return null;
+                    throw new Exception("Missing e2ud claim");
                 }
 
-                string[] enterprises = claim.ToString().Split(',');
-
-                List<int> enterprisesIds = new List<int>();
-
-                foreach (string item in enterprises)
-                {
-                    int id = int.Parse(item);
-                    enterprisesIds.Add(id);
-                }
-
-                return enterprisesIds;
+                var e2ud = JsonConvert.DeserializeObject<List<Claim_e2ud_item>>(claim.ToString());
+                return e2ud;
             } else
             {
                 return null;
