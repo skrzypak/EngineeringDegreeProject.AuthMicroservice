@@ -21,13 +21,6 @@ namespace AuthMicroservice.Core.Fluent
         #region Required
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //foreach (var entity in modelBuilder.Model.GetEntityTypes())
-            //{
-            //    entity.AddProperty("CreatedDate", typeof(DateTime));
-            //    entity.AddProperty("EnterpriseId", typeof(ulong));
-            //    entity.AddProperty("DomainUserId", typeof(ulong));
-            //}
-
             modelBuilder.ApplyConfiguration(new EnterpriseConfiguration());
             modelBuilder.ApplyConfiguration(new EnterpriseToUserDomainConfiguration());
             modelBuilder.ApplyConfiguration(new PersonConfiguration());

@@ -40,10 +40,17 @@ namespace AuthMicroservice.Core.Controllers
         public ActionResult Login([FromBody] LoginDto dto)
         {
             string token = _microserviceService.Login(dto);
-            CookieOptions option = new CookieOptions();
-            option.Expires = DateTime.Now.AddDays(_authenticationSettings.JwtExpireDays);
-            option.Secure = true;
-            option.HttpOnly = true;
+            CookieOptions option = JwtTokenFunc.GenerateJwtEmptyCookie(_authenticationSettings);
+            Response.Cookies.Append("X-Token", token, option);
+            return Ok();
+        }
+
+        [HttpPost("refresh-token")]
+        public ActionResult RefreshToken()
+        {
+            string token = _microserviceService.RefreshToken();
+            Response.Cookies.Delete("X-Token");
+            CookieOptions option = JwtTokenFunc.GenerateJwtEmptyCookie(_authenticationSettings);
             Response.Cookies.Append("X-Token", token, option);
             return Ok();
         }

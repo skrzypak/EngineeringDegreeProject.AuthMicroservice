@@ -116,7 +116,6 @@ namespace AuthMicroservice.Core.Services
             var userDomain = _context.UsersDomains
                 .AsNoTracking()
                 .Include(u => u.UserCredentials)
-                .Include(u => u.Person)
                 .Include(u => u.EnterprisesToUsersDomains)
                 .Where(u => u.IsEnabled == true && u.IsExpired == false && u.IsLocked == false)
                 .Where(u => u.UserCredentials.Where(uc => uc.IsExpired == false).Count() > 0)
@@ -135,39 +134,23 @@ namespace AuthMicroservice.Core.Services
                 throw new AuthException("Invalid username or password");
             }
 
-            var jwtToken =  generateJwtToken(userDomain);
+            var jwtToken = JwtTokenFunc.GenerateJwtToken(_authenticationSettings, userDomain);
             return jwtToken;
         }
 
-        private string generateJwtToken(UserDomain userDomain)
+        public string RefreshToken()
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_authenticationSettings.JwtKey);
+            var userDomain = _context.UsersDomains
+               .Include(u => u.EnterprisesToUsersDomains)
+               .Where(u => u.IsEnabled == true)
+               .FirstOrDefault(u => u.Id == _headerContextService.GetUserDomainId());
 
-            var tokenDescriptor = new SecurityTokenDescriptor
+            if (userDomain is null)
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim("claim_nameid", userDomain.Id.ToString()),
-                    new Claim("claim_unique_name", userDomain.Person.FullName),
-                    new Claim("claim_role", "user"),
-                    new Claim("claim_e2ud", userDomain.EnterprisesToUsersDomains.Count > 0 ?
-                        JsonConvert.SerializeObject (
-                            userDomain.EnterprisesToUsersDomains.Select(e2u => 
-                                new Claim_e2ud_item {
-                                    eudId = e2u.Id,
-                                    epsId = e2u.EnterpriseId,
-                                })
-                            ) : "[]"
-                    )
-                }),
-                Audience = _authenticationSettings.JwtIssuer,
-                Issuer = _authenticationSettings.JwtIssuer,
-                Expires = DateTime.Now.AddDays(_authenticationSettings.JwtExpireDays),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+                throw new AuthException("Invalid cookie");
+            }
+
+            return JwtTokenFunc.GenerateJwtToken(_authenticationSettings, userDomain);
         }
 
         public void Register(RegisterDto dto)
