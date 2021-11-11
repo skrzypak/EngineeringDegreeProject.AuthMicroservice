@@ -55,6 +55,13 @@ namespace AuthMicroservice.Core.Controllers
             return Ok();
         }
 
+        [HttpPost("logout")]
+        public ActionResult Logout()
+        {
+            Response.Cookies.Delete("X-Token");
+            return Ok();
+        }
+
         [HttpPatch("password")]
         public ActionResult ChangePassword([FromBody] ChangePassword dto)
         {

@@ -22,10 +22,10 @@ namespace AuthMicroservice.Core.Fluent.Configurations
             modelBuilder.Property(p => p.Email).HasMaxLength(100).IsRequired();
             modelBuilder.Property(p => p.PhoneNumber).HasMaxLength(12).IsRequired(false);
             modelBuilder.Ignore(p => p.Address);
-            modelBuilder.Property(p => p.StreetAddress).HasMaxLength(100).IsRequired();
-            modelBuilder.Property(p => p.PostalCode).HasMaxLength(6).IsRequired();
-            modelBuilder.Property(p => p.City).HasMaxLength(100).IsRequired();
-            modelBuilder.Property(p => p.State).HasMaxLength(100).IsRequired();
+            modelBuilder.Property(p => p.StreetAddress).HasMaxLength(100).IsRequired(false);
+            modelBuilder.Property(p => p.PostalCode).HasMaxLength(6).IsRequired(false);
+            modelBuilder.Property(p => p.City).HasMaxLength(100).IsRequired(false);
+            modelBuilder.Property(p => p.State).HasMaxLength(100).IsRequired(false);
 
             modelBuilder.ToTable("Persons");
             modelBuilder.Property(p => p.Id).HasColumnName("Id");

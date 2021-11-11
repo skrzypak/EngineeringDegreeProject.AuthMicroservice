@@ -57,7 +57,7 @@ namespace AuthMicroservice
             #region swagger
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "AuthMicroservice", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "EDP-AUTH-MSV", Version = "v1" });
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Description = @"JWT Authorization header using the Bearer scheme. 
@@ -101,12 +101,17 @@ namespace AuthMicroservice
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "AuthMicroservice v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EDP-AUTH-MSV"));
             }
 
-            app.UseMiddleware<IPFilterMiddleware>();
-            app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseHttpsRedirection();
+
+            if (env.IsDevelopment() == false)
+            {
+                app.UseMiddleware<IPFilterMiddleware>();
+            }
+           
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
             app.UseRouting();
 
