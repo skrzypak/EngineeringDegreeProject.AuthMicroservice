@@ -13,7 +13,7 @@ namespace AuthMicroservice.Core.Fluent.Configurations
         public void Configure(EntityTypeBuilder<EnterpriseToUserDomain> modelBuilder)
         {
             modelBuilder.HasKey(e => e.Id);
-            modelBuilder.Property(e => e.Id).IsRequired();
+            modelBuilder.Property(e => e.Id).ValueGeneratedOnAdd().IsRequired();
 
             modelBuilder.Property(e => e.EnterpriseId).IsRequired();
             modelBuilder.Property(e => e.UserDomainId).IsRequired();

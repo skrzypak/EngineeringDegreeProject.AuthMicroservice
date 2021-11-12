@@ -13,7 +13,7 @@ namespace AuthMicroservice.Core.Fluent.Configurations
         public void Configure(EntityTypeBuilder<Person> modelBuilder)
         {
             modelBuilder.HasKey(p => p.Id);
-            modelBuilder.Property(p => p.Id).IsRequired();
+            modelBuilder.Property(p => p.Id).ValueGeneratedOnAdd().IsRequired();
 
             modelBuilder.Property(p => p.FirstName).HasMaxLength(300).IsRequired();
             modelBuilder.Property(p => p.LastName).HasMaxLength(300).IsRequired();
