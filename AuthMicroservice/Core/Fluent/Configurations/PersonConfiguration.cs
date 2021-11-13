@@ -27,6 +27,8 @@ namespace AuthMicroservice.Core.Fluent.Configurations
             modelBuilder.Property(p => p.City).HasMaxLength(100).IsRequired(false);
             modelBuilder.Property(p => p.State).HasMaxLength(100).IsRequired(false);
 
+            modelBuilder.HasIndex(p => p.Email).IsUnique();
+
             modelBuilder.ToTable("Persons");
             modelBuilder.Property(p => p.Id).HasColumnName("Id");
             modelBuilder.Property(p => p.FirstName).HasColumnName("FirstName");

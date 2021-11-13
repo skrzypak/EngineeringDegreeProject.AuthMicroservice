@@ -30,9 +30,16 @@ namespace AuthMicroservice.Core.Controllers
         }
 
         [HttpPost("no/register")]
-        public ActionResult Register([FromBody] RegisterDto dto)
+        public async Task<ActionResult> Register([FromBody] RegisterDto dto)
         {
-            _microserviceService.Register(dto);
+            await _microserviceService.Register(dto);
+            return NoContent();
+        }
+
+        [HttpPost("no/register/confirmation")]
+        public ActionResult RegisterConfirmation([FromQuery] string id)
+        {
+            _microserviceService.RegisterConfirmation(Guid.Parse(id));
             return NoContent();
         }
 
@@ -43,6 +50,20 @@ namespace AuthMicroservice.Core.Controllers
             CookieOptions option = JwtTokenFunc.GenerateJwtEmptyCookie(_authenticationSettings);
             Response.Cookies.Append("X-Token", token, option);
             return Ok();
+        }
+
+        [HttpPost("no/request/{username}/password-reset")]
+        public ActionResult RequestPasswordReset([FromRoute] string username, [FromBody] Password dto)
+        {
+            _microserviceService.RequestPasswordReset(username, dto);
+            return NoContent();
+        }
+
+        [HttpPost("no/request/password-reset/confirmation")]
+        public ActionResult PasswordResetConfirmation([FromQuery] string id)
+        {
+            _microserviceService.PasswordResetConfirmation(Guid.Parse(id));
+            return NoContent();
         }
 
         [HttpPost("refresh-token")]

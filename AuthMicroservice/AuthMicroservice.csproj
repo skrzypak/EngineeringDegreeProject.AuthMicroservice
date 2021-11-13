@@ -21,8 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Core\Fluent\Configurations\" />
-    <Folder Include="Core\Fluent\Entities\" />
     <Folder Include="Core\Models\ViewModel\" />
   </ItemGroup>
 

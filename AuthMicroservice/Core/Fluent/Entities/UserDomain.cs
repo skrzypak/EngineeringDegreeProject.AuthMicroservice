@@ -13,6 +13,7 @@ namespace AuthMicroservice.Core.Fluent.Entities
         public bool IsLocked { get; set; }
         public bool IsExpired { get; set; }
         public bool? IsEnabled { get; set; }
+        public bool IsConfirmed { get; set; }
         public DateTime? ExpiredDate { get; set; }
         public virtual Person Person { get; set; }
         public virtual ICollection<EnterpriseToUserDomain> EnterprisesToUsersDomains { get; set; }

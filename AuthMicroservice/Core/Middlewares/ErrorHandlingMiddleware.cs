@@ -31,6 +31,11 @@ namespace AuthMicroservice.Core.Middlewares
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync(e.Message);
             }
+            catch (ConfirmationException e)
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync(e.Message);
+            }
             catch (RegisterException e)
             {
                 context.Response.StatusCode = 400;
