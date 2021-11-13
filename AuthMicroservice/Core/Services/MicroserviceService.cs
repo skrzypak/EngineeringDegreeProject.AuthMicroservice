@@ -169,7 +169,7 @@ namespace AuthMicroservice.Core.Services
 
         public async Task Register(RegisterDto dto)
         {
-            if (dto.Password != dto.Password)
+            if (dto.Password != dto.ConfirmedPassword)
             {
                 throw new RegisterException("Passwords not matching");
             }
