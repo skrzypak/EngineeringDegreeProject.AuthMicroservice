@@ -76,6 +76,12 @@ namespace AuthMicroservice.Core.Controllers
             return Ok();
         }
 
+        [HttpPost("session")]
+        public ActionResult Session()
+        {
+            return Ok();
+        }
+
         [HttpPost("logout")]
         public ActionResult Logout()
         {
