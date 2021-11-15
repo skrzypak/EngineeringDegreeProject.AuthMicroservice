@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Authentication;
 using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -17,16 +15,16 @@ namespace AuthMicroservice.Core.Controllers
     {
         private readonly ILogger<MicroserviceController> _logger;
         private readonly IMicroserviceService _microserviceService;
-        private readonly AuthenticationSettings _authenticationSettings;
+        private readonly IJwtCookieService _jwtCookieService;
 
         public MicroserviceController(
             ILogger<MicroserviceController> logger,
             IMicroserviceService microserviceService,
-            AuthenticationSettings authenticationSettings)
+            IJwtCookieService jwtCookieService)
         {
             _logger = logger;
             _microserviceService = microserviceService;
-            _authenticationSettings = authenticationSettings;
+            _jwtCookieService = jwtCookieService;
         }
 
         [HttpPost("no/register")]
@@ -47,8 +45,8 @@ namespace AuthMicroservice.Core.Controllers
         public ActionResult Login([FromBody] LoginDto dto)
         {
             string token = _microserviceService.Login(dto);
-            CookieOptions option = JwtTokenFunc.GenerateJwtEmptyCookie(_authenticationSettings);
-            Response.Cookies.Append("X-Token", token, option);
+            _jwtCookieService.Cookie(token)
+;
             return Ok();
         }
 
@@ -70,22 +68,20 @@ namespace AuthMicroservice.Core.Controllers
         public ActionResult RefreshToken()
         {
             string token = _microserviceService.RefreshToken();
-            Response.Cookies.Delete("X-Token");
-            CookieOptions option = JwtTokenFunc.GenerateJwtEmptyCookie(_authenticationSettings);
-            Response.Cookies.Append("X-Token", token, option);
+            _jwtCookieService.Cookie(token);
             return Ok();
         }
 
-        [HttpPost("session")]
+        [HttpGet("session")]
         public ActionResult Session()
         {
             return Ok();
         }
 
-        [HttpPost("logout")]
+        [HttpDelete("no/logout")]
         public ActionResult Logout()
         {
-            Response.Cookies.Delete("X-Token");
+            Response.Cookies.Delete("SESSIONID");
             return Ok();
         }
 

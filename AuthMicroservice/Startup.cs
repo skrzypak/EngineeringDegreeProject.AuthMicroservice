@@ -47,6 +47,8 @@ namespace AuthMicroservice
                 services.AddScoped<IHeaderContextService, HeaderContextServiceDev>();
             }
 
+            services.AddScoped<IJwtCookieService, JwtCookieService>();
+
             services.AddHttpContextAccessor();
             #endregion 
 

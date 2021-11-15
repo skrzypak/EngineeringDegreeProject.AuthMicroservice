@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Authentication;
 using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto.Enterprise;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -17,19 +12,19 @@ namespace AuthMicroservice.Core.Controllers.Singles
     {
         private readonly ILogger<EnterpriseController> _logger;
         private readonly IEnterpriseService _enterpriseService;
+        private readonly IJwtCookieService _jwtCookieService;
         private readonly IMicroserviceService _microserviceService;
-        private readonly AuthenticationSettings _authenticationSettings;
 
         public EnterpriseController(
             ILogger<EnterpriseController> logger,
             IEnterpriseService enterpriseService,
-            IMicroserviceService microserviceService,
-            AuthenticationSettings authenticationSettings)
+            IJwtCookieService jwtCookieService,
+            IMicroserviceService microserviceService)
         {
             _logger = logger;
             _enterpriseService = enterpriseService;
             _microserviceService = microserviceService;
-            _authenticationSettings = authenticationSettings;
+            _jwtCookieService = jwtCookieService;
         }
 
         [HttpGet]
@@ -50,10 +45,10 @@ namespace AuthMicroservice.Core.Controllers.Singles
         public ActionResult<int> Create([FromBody] EnterpriseCoreDto dto)
         {
             var id = _enterpriseService.Create(dto);
+
             string token = _microserviceService.RefreshToken();
-            Response.Cookies.Delete("X-Token");
-            CookieOptions option = JwtTokenFunc.GenerateJwtEmptyCookie(_authenticationSettings);
-            Response.Cookies.Append("X-Token", token, option);
+            _jwtCookieService.Cookie(token);
+
             return CreatedAtAction(nameof(GetById), new { enterpriseId = id }, null);
         }
 
