@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Authentication.Json;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Primitives;
 
 namespace Authentication
 {
@@ -18,45 +15,29 @@ namespace Authentication
 
         public IHeaderDictionary Header => _httpContextAccessor.HttpContext?.Request.Headers;
 
-        public int? GetUserDomainId()
+        public int GetUserDomainId()
         {
-            if(Header is null)
-            {
-                return null;
-            }
-
-            Microsoft.Extensions.Primitives.StringValues claim;
-            var result = Header.TryGetValue("claim_nameid", out claim);
-
-            return result ? int.Parse(claim) : null;
+            return int.Parse(getItem("claim_id"));
         }
 
-        public bool HasEnterprise(int enterpriseId) => GetClaim_e2ud().Any(i => i.epsId == enterpriseId);
-
-        public int GetEnterpriseUserDomainId(int enterpriseId) 
-            => GetClaim_e2ud().Where(i => i.epsId == enterpriseId).Select(i => i.eudId).FirstOrDefault();
-
-        public List<int> GetEnterprisesIds()
-            => GetClaim_e2ud().Select(i => i.epsId).ToList();
-
-        public virtual List<Claim_e2ud_item> GetClaim_e2ud()
+        private StringValues getItem(string itemName)
         {
-            if (Header is not null)
+            if (Header is null)
             {
-                Microsoft.Extensions.Primitives.StringValues claim;
-                var result = Header.TryGetValue("claim_e2ud", out claim);
+                throw new Exception("Header not define");
+            }
 
-                if(result == false)
-                {
-                    throw new Exception("Missing e2ud claim");
-                }
+            StringValues claim;
+            bool operationStatus = Header.TryGetValue(itemName, out claim);
 
-                var e2ud = JsonConvert.DeserializeObject<List<Claim_e2ud_item>>(claim.ToString());
-                return e2ud;
+            if (operationStatus)
+            {
+                return claim;
             } else
             {
-                return null;
+                throw new Exception($"Not found item: {itemName} in header");
             }
         }
+
     }
 }

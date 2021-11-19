@@ -1,14 +1,11 @@
 ﻿using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using Authentication;
-using Authentication.Json;
 using AuthMicroservice.Core.Fluent.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
 
 namespace AuthMicroservice.Core
 {
@@ -33,18 +30,8 @@ namespace AuthMicroservice.Core
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim("claim_nameid", userDomain.Id.ToString()),
-                    new Claim("claim_unique_name", userDomain.Username),
-                    new Claim("claim_role", "user"),
-                    new Claim("claim_e2ud", userDomain.EnterprisesToUsersDomains.Count > 0 ?
-                        JsonConvert.SerializeObject (
-                            userDomain.EnterprisesToUsersDomains.Select(e2u => 
-                                new Claim_e2ud_item {
-                                    eudId = e2u.Id,
-                                    epsId = e2u.EnterpriseId,
-                                })
-                            ) : "[]"
-                    )
+                    new Claim("claim_id", userDomain.Id.ToString()),
+                    new Claim("claim_username", userDomain.Username)
                 }),
                 Audience = authenticationSettings.JwtIssuer,
                 Issuer = authenticationSettings.JwtIssuer,

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using Authentication;
 using AuthMicroservice.Core.Fluent;
 using AuthMicroservice.Core.Fluent.Entities;
@@ -33,19 +35,12 @@ namespace AuthMicroservice
         {
             #region Authentication
             services.Configure<ApplicationOptions>(Configuration.GetSection("ApplicationOptions"));
-            services.AddScoped<IPFilterMiddleware>();
 
             var authenticationSettings = new AuthenticationSettings();
             Configuration.GetSection("Authentication").Bind(authenticationSettings);
             services.AddSingleton(authenticationSettings);
 
-            if(!isDevelopment)
-            {
-                services.AddScoped<IHeaderContextService, HeaderContextService>();
-            } else
-            {
-                services.AddScoped<IHeaderContextService, HeaderContextServiceDev>();
-            }
+            services.AddScoped<IHeaderContextService, HeaderContextService>();
 
             services.AddScoped<IJwtCookieService, JwtCookieService>();
 
@@ -69,34 +64,6 @@ namespace AuthMicroservice
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "EDP-AUTH-MSV", Version = "v1" });
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = @"JWT Authorization header using the Bearer scheme. 
-                      Enter 'Bearer' [space] and then your token in the text input below.
-                      Example: 'Bearer =ABF$Hjwt'",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
-                });
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement()
-                  {
-                    {
-                      new OpenApiSecurityScheme
-                      {
-                        Reference = new OpenApiReference
-                          {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                          },
-                          Scheme = "oauth2",
-                          Name = "Bearer",
-                          In = ParameterLocation.Header,
-
-                        },
-                        new List<string>()
-                      }
-                    });
             });
             #endregion
 
@@ -112,15 +79,14 @@ namespace AuthMicroservice
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EDP-AUTH-MSV"));
+
+                app.UseSwaggerUI(c => {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EDP-AUTH-MSV");
+                    c.RoutePrefix = string.Empty;
+                });
             }
 
             app.UseHttpsRedirection();
-
-            if (env.IsDevelopment() == false)
-            {
-                app.UseMiddleware<IPFilterMiddleware>();
-            }
            
             app.UseMiddleware<ErrorHandlingMiddleware>();
 

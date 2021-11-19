@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -27,6 +28,7 @@ namespace AuthMicroservice.Core.Controllers
             _jwtCookieService = jwtCookieService;
         }
 
+        [AllowAnonymous]
         [HttpPost("no/register")]
         public async Task<ActionResult> Register([FromBody] RegisterDto dto)
         {
@@ -34,6 +36,7 @@ namespace AuthMicroservice.Core.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpPost("no/register/confirmation")]
         public ActionResult RegisterConfirmation([FromQuery] string id)
         {
@@ -41,15 +44,16 @@ namespace AuthMicroservice.Core.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpPost("no/login")]
         public ActionResult Login([FromBody] LoginDto dto)
         {
             string token = _microserviceService.Login(dto);
-            _jwtCookieService.Cookie(token)
-;
+            _jwtCookieService.Cookie(token);
             return Ok();
         }
 
+        [AllowAnonymous]
         [HttpPost("no/request/{username}/password-reset")]
         public ActionResult RequestPasswordReset([FromRoute] string username, [FromBody] Password dto)
         {
@@ -57,6 +61,7 @@ namespace AuthMicroservice.Core.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpPost("no/request/password-reset/confirmation")]
         public ActionResult PasswordResetConfirmation([FromQuery] string id)
         {
@@ -78,6 +83,7 @@ namespace AuthMicroservice.Core.Controllers
             return Ok();
         }
 
+        [AllowAnonymous]
         [HttpDelete("no/logout")]
         public ActionResult Logout()
         {
