@@ -66,7 +66,7 @@ namespace AuthMicroservice.Core.Controllers.Singles
             return NoContent();
         }
 
-        [HttpPost("{enterpriseId}/users")]
+        [HttpPatch("{enterpriseId}/users")]
         public ActionResult AddEnterpriseUser([FromRoute] int enterpriseId, [FromQuery] string username, [FromQuery] string email)
         {
             _enterpriseService.AddEnterpriseUser(enterpriseId, username, email);

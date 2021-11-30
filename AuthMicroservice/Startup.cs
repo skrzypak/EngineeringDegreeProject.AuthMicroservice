@@ -10,6 +10,7 @@ using AuthMicroservice.Core.Middlewares;
 using AuthMicroservice.Core.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,6 +46,11 @@ namespace AuthMicroservice
             services.AddScoped<IJwtCookieService, JwtCookieService>();
 
             services.AddHttpContextAccessor();
+			
+			services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.SameSite = SameSiteMode.None;
+            });
             #endregion 
 
             services.AddDbContext<MicroserviceContext>(options =>

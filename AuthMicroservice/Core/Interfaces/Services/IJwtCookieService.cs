@@ -8,6 +8,6 @@ namespace AuthMicroservice.Core.Interfaces.Services
     public interface IJwtCookieService
     {
         public void Cookie(string token);
-        public bool Exists();
+        public void Delete();
     }
 }

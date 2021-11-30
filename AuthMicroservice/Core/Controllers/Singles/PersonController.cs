@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace AuthMicroservice.Core.Controllers.Singles
 {
     [ApiController]
-    [Route("/api/auth/1.0.0/account")]
+    [Route("/api/auth/1.0.0/person")]
     public class PersonController : ControllerBase
     {
         private readonly ILogger<PersonController> _logger;
@@ -22,14 +22,14 @@ namespace AuthMicroservice.Core.Controllers.Singles
             _personService = personService;
         }
 
-        [HttpGet]
+        [HttpGet("account")]
         public ActionResult<object> GetYourself()
         {
             var response = _personService.GetYourself();
             return Ok(response);
         }
 
-        [HttpPatch]
+        [HttpPut("account")]
         public ActionResult Update([FromBody] PersonCoreDto dto)
         {
             _personService.Update(dto);

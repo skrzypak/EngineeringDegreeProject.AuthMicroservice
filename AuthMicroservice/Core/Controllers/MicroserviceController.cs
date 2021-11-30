@@ -37,7 +37,7 @@ namespace AuthMicroservice.Core.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("no/register/confirmation")]
+        [HttpGet("no/register/confirmation")]
         public ActionResult RegisterConfirmation([FromQuery] string id)
         {
             _microserviceService.RegisterConfirmation(Guid.Parse(id));
@@ -62,7 +62,7 @@ namespace AuthMicroservice.Core.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("no/request/password-reset/confirmation")]
+        [HttpGet("no/request/password-reset/confirmation")]
         public ActionResult PasswordResetConfirmation([FromQuery] string id)
         {
             _microserviceService.PasswordResetConfirmation(Guid.Parse(id));
@@ -87,11 +87,11 @@ namespace AuthMicroservice.Core.Controllers
         [HttpDelete("no/logout")]
         public ActionResult Logout()
         {
-            Response.Cookies.Delete("SESSIONID");
+            _jwtCookieService.Delete();
             return Ok();
         }
 
-        [HttpPatch("password")]
+        [HttpPatch("change/password")]
         public ActionResult ChangePassword([FromBody] ChangePassword dto)
         {
             _microserviceService.ChangePassword(dto);

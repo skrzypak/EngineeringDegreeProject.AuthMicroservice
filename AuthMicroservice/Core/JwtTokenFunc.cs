@@ -17,7 +17,7 @@ namespace AuthMicroservice.Core
             option.Expires = DateTime.Now.AddDays(authenticationSettings.JwtExpireDays);
             option.Secure = true;
             option.HttpOnly = true;
-            option.SameSite = SameSiteMode.Unspecified;
+            option.SameSite = SameSiteMode.None;
             return option;
         }
 

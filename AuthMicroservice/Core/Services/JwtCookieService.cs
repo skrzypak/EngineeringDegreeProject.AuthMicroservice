@@ -9,18 +9,15 @@ namespace AuthMicroservice.Core.Services
     {
         private readonly ILogger<JwtCookieService> _logger;
         private readonly AuthenticationSettings _authenticationSettings;
-        private readonly IMicroserviceService _microserviceService;
         protected readonly IHttpContextAccessor _httpContextAccessor;
 
         public JwtCookieService(
             ILogger<JwtCookieService> logger, 
             AuthenticationSettings authenticationSettings, 
-            IMicroserviceService microserviceService,
             IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _authenticationSettings = authenticationSettings;
-            _microserviceService = microserviceService;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -36,22 +33,14 @@ namespace AuthMicroservice.Core.Services
             _httpContextAccessor.HttpContext.Response.Cookies.Append("SESSIONID", token, option);
         }
 
-        private void Delete()
+        public void Delete()
         {
-            if(Exists())
+            if(_httpContextAccessor.HttpContext.Request.Cookies["SESSIONID"] != null)
             {
-                _httpContextAccessor.HttpContext.Response.Cookies.Delete("SESSIONID");
+                CookieOptions option = JwtTokenFunc.GenerateJwtEmptyCookie(_authenticationSettings);
+                option.Expires = System.DateTime.Now.AddDays(-1);
+                _httpContextAccessor.HttpContext.Response.Cookies.Append("SESSIONID", "", option);
             }
-        }
-
-        public bool Exists()
-        {
-            if (_httpContextAccessor.HttpContext.Request.Cookies["SESSIONID"] != null)
-            {
-                return true;
-            }
-
-            return false;
         }
     }
 }
