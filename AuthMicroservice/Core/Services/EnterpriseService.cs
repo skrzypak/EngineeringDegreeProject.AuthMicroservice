@@ -133,7 +133,7 @@ namespace AuthMicroservice.Core.Services
                 .AsNoTracking()
                 .Include(e2u => e2u.UserDomain)
                 .Include(e2u => e2u.Enterprise)
-                .Where(e2u => e2u.Id == enterpriseId)
+                .Where(e2u => e2u.EnterpriseId == enterpriseId)
                 .Select(e2u => new
                 {
                     e2u.EnterpriseId,
