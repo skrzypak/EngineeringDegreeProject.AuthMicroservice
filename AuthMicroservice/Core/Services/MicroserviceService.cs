@@ -167,7 +167,7 @@ namespace AuthMicroservice.Core.Services
             return JwtTokenFunc.GenerateJwtToken(_authenticationSettings, userDomain);
         }
 
-        public async Task Register(RegisterDto dto)
+        public async Task<string> Register(RegisterDto dto)
         {
             if (dto.Password != dto.ConfirmedPassword)
             {
@@ -188,10 +188,11 @@ namespace AuthMicroservice.Core.Services
 
             userDomain.UserCredentials.Add(userCredential);
 
+            string link = "";
 
             // CONFIRMATION
             var strategy = _context.Database.CreateExecutionStrategy();
-            await strategy.ExecuteAsync(async () =>
+            await strategy.ExecuteAsync(async () => 
             {
                 using (var transaction = _context.Database.BeginTransaction())
                 {
@@ -210,12 +211,13 @@ namespace AuthMicroservice.Core.Services
                         throw new RegisterException("Username or email exists in database");
                     }
                 }
-            });   
-            
+            });
+
+            return link;
         }
 
 
-        public void RequestPasswordReset(string username, Password dto)
+        public string RequestPasswordReset(string username, Password dto)
         {
             if (dto.New != dto.Confirm)
             {
@@ -224,6 +226,7 @@ namespace AuthMicroservice.Core.Services
 
             var userDomain = _context.UsersDomains
                 .AsNoTracking()
+                .Include(u => u.Person)
                 .Include(u => u.UserCredentials)
                 .Include(u => u.EnterprisesToUsersDomains)
                 .Where(u => u.Username == username)
@@ -235,7 +238,10 @@ namespace AuthMicroservice.Core.Services
                 string hashUserCredential = _passwordHasher.HashPassword(userDomain, dto.New);
 
                 // CONFIRMATION
-                generatePasswordResetConfirmation(userDomain, hashUserCredential);
+                return generatePasswordResetConfirmation(userDomain, hashUserCredential);
+            } else
+            {
+                throw new AuthException("Account problem. Contact with support");
             }
         }
 
@@ -302,7 +308,7 @@ namespace AuthMicroservice.Core.Services
             _context.SaveChanges();
         }
 
-        private void generateRegisterConfirmation(UserDomain userDomain)
+        private string generateRegisterConfirmation(UserDomain userDomain)
         {
             var cfg = new RegisterConfirmation()
             {
@@ -313,10 +319,10 @@ namespace AuthMicroservice.Core.Services
             _context.RegisterConfirmations.Add(cfg);
             _context.SaveChanges();
 
-            sendConfirmationRegisterEmail(userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
+            return sendConfirmationRegisterEmail (userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
         }
 
-        private void generatePasswordResetConfirmation(UserDomain userDomain, string hashUserCredential)
+        private string generatePasswordResetConfirmation(UserDomain userDomain, string hashUserCredential)
         {
             var cfg = new PasswordConfirmation()
             {
@@ -327,19 +333,21 @@ namespace AuthMicroservice.Core.Services
             _context.PasswordConfirmations.Add(cfg);
             _context.SaveChanges();
 
-            sendConfirmationResetPassowrdEmail(userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
+            return sendConfirmationResetPassowrdEmail(userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
         }
 
-        private void sendConfirmationRegisterEmail(string receiverFullName, string receiverEmail, Guid random)
+        private string sendConfirmationRegisterEmail(string receiverFullName, string receiverEmail, Guid random)
         {
             var url = $"https://edp-gateway.azurewebsites.net/auth/msv/no/register/confirmation/{random}";
             sendEmail(receiverFullName, receiverEmail, "Welcome in EDP", url);
+            return url;
         }
 
-        private void sendConfirmationResetPassowrdEmail(string receiverFullName, string receiverEmail, Guid random)
+        private string  sendConfirmationResetPassowrdEmail(string receiverFullName, string receiverEmail, Guid random)
         {
             var url = $"https://edp-gateway.azurewebsites.net/auth/msv/no/request/password-reset/confirmation/{random}";
             sendEmail(receiverFullName, receiverEmail, $"EDP password reset confirmation", url);
+            return url;
         }
 
         private void sendEmail(string receiverFullName, string receiverEmail, string msgHeader, string msgHtml)

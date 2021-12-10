@@ -32,8 +32,8 @@ namespace AuthMicroservice.Core.Controllers
         [HttpPost("no/register")]
         public async Task<ActionResult> Register([FromBody] RegisterDto dto)
         {
-            await _microserviceService.Register(dto);
-            return NoContent();
+            string link = await _microserviceService.Register(dto);
+            return Ok(link);
         }
 
         [AllowAnonymous]
@@ -57,8 +57,8 @@ namespace AuthMicroservice.Core.Controllers
         [HttpPost("no/request/{username}/password-reset")]
         public ActionResult RequestPasswordReset([FromRoute] string username, [FromBody] Password dto)
         {
-            _microserviceService.RequestPasswordReset(username, dto);
-            return NoContent();
+            string link = _microserviceService.RequestPasswordReset(username, dto);
+            return Ok(link);
         }
 
         [AllowAnonymous]
