@@ -32,16 +32,16 @@ namespace AuthMicroservice.Core.Controllers
         [HttpPost("no/register")]
         public async Task<ActionResult> Register([FromBody] RegisterDto dto)
         {
-            string link = await _microserviceService.Register(dto);
-            return Ok(link);
+            string code = await _microserviceService.Register(dto);
+            return Ok(code);
         }
 
         [AllowAnonymous]
-        [HttpGet("no/register/confirmation")]
-        public ActionResult RegisterConfirmation([FromQuery] string id)
+        [HttpGet("no/register/confirmation/{id}")]
+        public RedirectResult RegisterConfirmation([FromRoute] string id)
         {
             _microserviceService.RegisterConfirmation(Guid.Parse(id));
-            return NoContent();
+            return Redirect("http://localhost:4200/login");
         }
 
         [AllowAnonymous]
@@ -57,16 +57,16 @@ namespace AuthMicroservice.Core.Controllers
         [HttpPost("no/request/{username}/password-reset")]
         public ActionResult RequestPasswordReset([FromRoute] string username, [FromBody] Password dto)
         {
-            string link = _microserviceService.RequestPasswordReset(username, dto);
-            return Ok(link);
+            string code = _microserviceService.RequestPasswordReset(username, dto);
+            return Ok(code);
         }
 
         [AllowAnonymous]
-        [HttpGet("no/request/password-reset/confirmation")]
-        public ActionResult PasswordResetConfirmation([FromQuery] string id)
+        [HttpGet("no/request/password-reset/confirmation/{id}")]
+        public RedirectResult PasswordResetConfirmation([FromRoute] string id)
         {
             _microserviceService.PasswordResetConfirmation(Guid.Parse(id));
-            return NoContent();
+            return Redirect("http://localhost:4200/login");
         }
 
         [HttpPost("refresh-token")]

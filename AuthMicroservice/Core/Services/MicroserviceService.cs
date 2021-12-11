@@ -188,7 +188,7 @@ namespace AuthMicroservice.Core.Services
 
             userDomain.UserCredentials.Add(userCredential);
 
-            string link = "";
+            string code = "";
 
             // CONFIRMATION
             var strategy = _context.Database.CreateExecutionStrategy();
@@ -201,7 +201,7 @@ namespace AuthMicroservice.Core.Services
                         _context.UsersDomains.Add(userDomain);
                         _context.SaveChanges();
 
-                        generateRegisterConfirmation(userDomain);
+                        code = generateRegisterConfirmation(userDomain);
 
                         transaction.Commit();
                     }
@@ -213,7 +213,7 @@ namespace AuthMicroservice.Core.Services
                 }
             });
 
-            return link;
+            return code;
         }
 
 
@@ -319,7 +319,9 @@ namespace AuthMicroservice.Core.Services
             _context.RegisterConfirmations.Add(cfg);
             _context.SaveChanges();
 
-            return sendConfirmationRegisterEmail (userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
+            sendConfirmationRegisterEmail (userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
+
+            return $"{cfg.Id}";
         }
 
         private string generatePasswordResetConfirmation(UserDomain userDomain, string hashUserCredential)
@@ -333,21 +335,20 @@ namespace AuthMicroservice.Core.Services
             _context.PasswordConfirmations.Add(cfg);
             _context.SaveChanges();
 
-            return sendConfirmationResetPassowrdEmail(userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
+            sendConfirmationResetPassowrdEmail(userDomain.Person.FullName, userDomain.Person.Email, cfg.Id);
+            return $"{cfg.Id}";
         }
 
-        private string sendConfirmationRegisterEmail(string receiverFullName, string receiverEmail, Guid random)
+        private void sendConfirmationRegisterEmail(string receiverFullName, string receiverEmail, Guid random)
         {
             var url = $"https://edp-gateway.azurewebsites.net/auth/msv/no/register/confirmation/{random}";
             sendEmail(receiverFullName, receiverEmail, "Welcome in EDP", url);
-            return url;
         }
 
-        private string  sendConfirmationResetPassowrdEmail(string receiverFullName, string receiverEmail, Guid random)
+        private void  sendConfirmationResetPassowrdEmail(string receiverFullName, string receiverEmail, Guid random)
         {
             var url = $"https://edp-gateway.azurewebsites.net/auth/msv/no/request/password-reset/confirmation/{random}";
             sendEmail(receiverFullName, receiverEmail, $"EDP password reset confirmation", url);
-            return url;
         }
 
         private void sendEmail(string receiverFullName, string receiverEmail, string msgHeader, string msgHtml)
