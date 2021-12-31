@@ -6,6 +6,7 @@ using AuthMicroservice.Core.Interfaces.Services;
 using AuthMicroservice.Core.Models.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace AuthMicroservice.Core.Controllers
@@ -17,15 +18,18 @@ namespace AuthMicroservice.Core.Controllers
         private readonly ILogger<MicroserviceController> _logger;
         private readonly IMicroserviceService _microserviceService;
         private readonly IJwtCookieService _jwtCookieService;
+        private readonly string _appBaseUrl;
 
         public MicroserviceController(
             ILogger<MicroserviceController> logger,
             IMicroserviceService microserviceService,
-            IJwtCookieService jwtCookieService)
+            IJwtCookieService jwtCookieService,
+            IConfiguration configuration)
         {
             _logger = logger;
             _microserviceService = microserviceService;
             _jwtCookieService = jwtCookieService;
+            _appBaseUrl = configuration.GetValue<string>("AppUrl");
         }
 
         [AllowAnonymous]
@@ -41,7 +45,7 @@ namespace AuthMicroservice.Core.Controllers
         public RedirectResult RegisterConfirmation([FromRoute] string id)
         {
             _microserviceService.RegisterConfirmation(Guid.Parse(id));
-            return Redirect("http://localhost:4200/login");
+            return Redirect($"{_appBaseUrl}/login");
         }
 
         [AllowAnonymous]
@@ -66,7 +70,7 @@ namespace AuthMicroservice.Core.Controllers
         public RedirectResult PasswordResetConfirmation([FromRoute] string id)
         {
             _microserviceService.PasswordResetConfirmation(Guid.Parse(id));
-            return Redirect("http://localhost:4200/login");
+            return Redirect($"{_appBaseUrl}/login");
         }
 
         [HttpPost("refresh-token")]

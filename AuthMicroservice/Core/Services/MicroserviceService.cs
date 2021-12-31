@@ -16,6 +16,7 @@ using System.Net.Mail;
 using System.Net;
 using System.Threading.Tasks;
 using AuthMicroservice.Core.Fluent.Entities.Confirmation;
+using Microsoft.Extensions.Configuration;
 
 namespace AuthMicroservice.Core.Services
 {
@@ -27,6 +28,7 @@ namespace AuthMicroservice.Core.Services
         private readonly IPasswordHasher<UserDomain> _passwordHasher;
         private readonly AuthenticationSettings _authenticationSettings;
         private readonly IHeaderContextService _headerContextService;
+        private readonly IConfiguration _configuration;
 
         public MicroserviceService(
             ILogger<MicroserviceService> logger,
@@ -34,7 +36,8 @@ namespace AuthMicroservice.Core.Services
             IMapper mapper,
             IPasswordHasher<UserDomain> passwordHasher, 
             AuthenticationSettings authenticationSettings,
-            IHeaderContextService headerContextService)
+            IHeaderContextService headerContextService,
+            IConfiguration configuration)
         {
             _logger = logger;
             _context = context;
@@ -42,6 +45,7 @@ namespace AuthMicroservice.Core.Services
             _passwordHasher = passwordHasher;
             _authenticationSettings = authenticationSettings;
             _headerContextService = headerContextService;
+            _configuration = configuration;
         }
 
         public void ChangePassword(ChangePassword dto)
@@ -201,14 +205,22 @@ namespace AuthMicroservice.Core.Services
                         _context.UsersDomains.Add(userDomain);
                         _context.SaveChanges();
 
-                        code = generateRegisterConfirmation(userDomain);
-
-                        transaction.Commit();
                     }
                     catch (Exception ex)
                     {
                         transaction.Rollback();
                         throw new RegisterException("Username or email exists in database");
+                    }
+
+                    try
+                    {
+                        code = generateRegisterConfirmation(userDomain);
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw new RegisterException("Can't send email confirmation");
                     }
                 }
             });
@@ -341,13 +353,15 @@ namespace AuthMicroservice.Core.Services
 
         private void sendConfirmationRegisterEmail(string receiverFullName, string receiverEmail, Guid random)
         {
-            var url = $"https://edp-gateway.azurewebsites.net/auth/msv/no/register/confirmation/{random}";
+            var upstream = _configuration.GetValue<string>("GatewayUrl");
+            var url = $"{upstream}/auth/msv/no/register/confirmation/{random}";
             sendEmail(receiverFullName, receiverEmail, "Welcome in EDP", url);
         }
 
         private void  sendConfirmationResetPassowrdEmail(string receiverFullName, string receiverEmail, Guid random)
         {
-            var url = $"https://edp-gateway.azurewebsites.net/auth/msv/no/request/password-reset/confirmation/{random}";
+            var upstream = _configuration.GetValue<string>("GatewayUrl");
+            var url = $"{upstream}/auth/msv/no/request/password-reset/confirmation/{random}";
             sendEmail(receiverFullName, receiverEmail, $"EDP password reset confirmation", url);
         }
 
@@ -355,11 +369,11 @@ namespace AuthMicroservice.Core.Services
         {
             var client = new SmtpClient("smtp.mailtrap.io", 2525)
             {
-                Credentials = new NetworkCredential("67b09ca687f2b1", "ee2e05a9455dd8"),
+                Credentials = new NetworkCredential("ebd6e458083d65", "766f877b2f8100"),
                 EnableSsl = true
             };
 
-            client.Send("noreplay@edp.com", $"{receiverFullName}<{receiverEmail}>", msgHeader, msgHtml);
+            client.Send("noreplay@nuie.com", $"{receiverFullName}<{receiverEmail}>", msgHeader, msgHtml);
         }
     }
 }
